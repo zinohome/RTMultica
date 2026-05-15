@@ -7,10 +7,9 @@
         <item name="android:navigationBarColor">@color/colorPrimary</item>
     </style>
 
-    <!-- TWA LauncherActivity 用透明主题，避免启动时白屏闪烁 -->
+    <!-- TWA LauncherActivity 启动过渡主题：深色背景防止透明穿透桌面 -->
     <style name="Theme.BrowserHelper.Transparent" parent="android:Theme.NoTitleBar">
-        <item name="android:windowIsTranslucent">true</item>
-        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowBackground">@color/colorPrimary</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:backgroundDimEnabled">false</item>
     </style>
