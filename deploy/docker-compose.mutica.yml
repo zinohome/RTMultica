@@ -38,9 +38,15 @@ services:
       # 文件上传通过前端 /uploads/* 代理对外暴露
       LOCAL_UPLOAD_DIR: /app/data/uploads
       LOCAL_UPLOAD_BASE_URL: ${FRONTEND_ORIGIN}
-      # 邮件验证（留空时验证码打印到后端日志，适合初始设置）
+      # 邮件验证 —— Resend 或 SMTP 二选一，均留空时验证码打印到后端日志
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-noreply@multica.ai}
+      # SMTP relay（v0.3.1 新增，自托管替代 Resend 的方案）
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-25}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_TLS_INSECURE: ${SMTP_TLS_INSECURE:-false}
       # Google OAuth（可选）
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
