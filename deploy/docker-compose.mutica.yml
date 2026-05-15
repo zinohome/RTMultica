@@ -1,0 +1,75 @@
+name: mutica
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-multica}
+      POSTGRES_USER: ${POSTGRES_USER:-multica}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - /data/Multica/postgres:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-multica} -d ${POSTGRES_DB:-multica}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - 1panel-network
+
+  backend:
+    image: ghcr.io/multica-ai/multica-backend:${MULTICA_IMAGE_TAG:-latest}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    volumes:
+      - /data/Multica/uploads:/app/data/uploads
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-multica}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-multica}?sslmode=disable
+      PORT: "8080"
+      JWT_SECRET: ${JWT_SECRET}
+      APP_ENV: production
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      MULTICA_APP_URL: ${MULTICA_APP_URL}
+      # 文件上传通过前端 /uploads/* 代理对外暴露
+      LOCAL_UPLOAD_DIR: /app/data/uploads
+      LOCAL_UPLOAD_BASE_URL: ${FRONTEND_ORIGIN}
+      # 邮件验证（留空时验证码打印到后端日志，适合初始设置）
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-noreply@multica.ai}
+      # Google OAuth（可选）
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-}
+      # Cookie（前后端同一浏览器域名，留空为 host-only cookie）
+      COOKIE_DOMAIN: ${COOKIE_DOMAIN:-}
+      # 注册控制
+      ALLOW_SIGNUP: ${ALLOW_SIGNUP:-true}
+      ALLOWED_EMAILS: ${ALLOWED_EMAILS:-}
+      ALLOWED_EMAIL_DOMAINS: ${ALLOWED_EMAIL_DOMAINS:-}
+    restart: unless-stopped
+    networks:
+      - 1panel-network
+
+  frontend:
+    image: ghcr.io/multica-ai/multica-web:${MULTICA_IMAGE_TAG:-latest}
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+    volumes:
+      # TWA 验证文件，供 Android 应用安装时校验签名
+      - /data/Multica/assetlinks.json:/app/apps/web/public/.well-known/assetlinks.json:ro
+    environment:
+      HOSTNAME: "0.0.0.0"
+    restart: unless-stopped
+    networks:
+      - 1panel-network
+
+networks:
+  1panel-network:
+    external: true

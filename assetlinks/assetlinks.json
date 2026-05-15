@@ -1,0 +1,10 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "top.naivehero.multica",
+    "sha256_cert_fingerprints": [
+      "0D:59:7D:C6:E6:D5:FC:BA:0B:F0:C7:A2:44:F3:EA:34:F2:F2:7F:DA:D5:0A:F7:58:02:B4:CB:43:AB:4A:26:96"
+    ]
+  }
+}]

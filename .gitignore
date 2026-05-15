@@ -1,0 +1,26 @@
+# 上游项目 - 只读，不追踪
+projects/
+
+# 敏感配置
+deploy/.env*
+*.env
+*.env.local
+*.env.production
+
+# Android 构建产物
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
+android/app/keystore.jks
+android/keystore/
+*.apk
+*.aab
+
+# 系统文件
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+*.iml
