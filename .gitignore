@@ -1,6 +1,10 @@
 # 上游项目 - 只读，不追踪
 projects/
 
+# Node / Capacitor
+node_modules/
+www/
+
 # 敏感配置
 deploy/.env*
 *.env

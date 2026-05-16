@@ -1,0 +1,10 @@
+{
+  "appId": "top.naivehero.multica",
+  "appName": "Multica",
+  "webDir": "www",
+  "server": {
+    "url": "https://mtc.naivehero.top:8443",
+    "cleartext": false,
+    "androidScheme": "https"
+  }
+}
