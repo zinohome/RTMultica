@@ -1,13 +1,22 @@
 #!/usr/bin/env bash
 # 配置 multica daemon 开机自动启动（systemd 用户服务）
 # 适用：已安装 multica CLI 的 Linux 机器
-# 用法：bash setup-multica-daemon.sh
+# 用法：bash setup-multica-daemon.sh（用 ubuntu/普通用户执行，不要用 root）
 
 set -euo pipefail
 
 MULTICA_BIN=$(command -v multica 2>/dev/null || echo "")
 if [ -z "$MULTICA_BIN" ]; then
   echo "错误：未找到 multica 命令，请先安装 multica CLI"
+  exit 1
+fi
+
+# su - 切换过来时没有完整登录会话，手动补上 D-Bus 和运行时目录
+export XDG_RUNTIME_DIR="/run/user/$(id -u)"
+export DBUS_SESSION_BUS_ADDRESS="unix:path=${XDG_RUNTIME_DIR}/bus"
+
+if [ ! -d "$XDG_RUNTIME_DIR" ]; then
+  echo "错误：$XDG_RUNTIME_DIR 不存在，请确保 systemd-logind 正在运行"
   exit 1
 fi
 
@@ -36,7 +45,7 @@ EOF
 systemctl --user daemon-reload
 systemctl --user enable multica-daemon.service
 
-# enable-linger 需要 sudo，让 daemon 在未登录时也能随系统启动
+# enable-linger 让 daemon 在未登录时也能随系统启动
 if sudo loginctl enable-linger "$USER" 2>/dev/null; then
   echo "Linger 已开启（无需登录即可自动启动）"
 else
