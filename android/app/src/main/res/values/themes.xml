@@ -12,5 +12,9 @@
         <item name="android:windowBackground">@color/colorPrimary</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:backgroundDimEnabled">false</item>
+        <!-- 显式开启硬件加速，修复部分 MIUI 平板渲染黑屏 -->
+        <item name="android:hardwareAccelerated">true</item>
+        <!-- 禁用窗口内容叠层动画，避免平板多窗口模式下出现黑屏闪烁 -->
+        <item name="android:windowContentOverlay">@null</item>
     </style>
 </resources>

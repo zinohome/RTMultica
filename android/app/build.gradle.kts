@@ -40,13 +40,13 @@ android {
         }
     }
 
-    // 只打 arm64 包，专供 Xiaomi 14 Pro
+    // 输出 arm64-v8a 专用包 + universal 包，兼容 Xiaomi Pad 5 Pro 等平板设备
     splits {
         abi {
             isEnable = true
             reset()
-            include("arm64-v8a")
-            isUniversalApk = false
+            include("arm64-v8a", "armeabi-v7a", "x86_64")
+            isUniversalApk = true
         }
     }
 
