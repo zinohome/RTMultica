@@ -45,6 +45,13 @@ EOF
 systemctl --user daemon-reload
 systemctl --user enable multica-daemon.service
 
+# 如果 daemon 已在 systemd 外手动运行，先停掉再交给 systemd 接管
+if $MULTICA_BIN daemon status 2>/dev/null | grep -q "running"; then
+  echo "检测到 daemon 已在运行，先停止再由 systemd 接管..."
+  $MULTICA_BIN daemon stop 2>/dev/null || true
+  sleep 1
+fi
+
 # enable-linger 让 daemon 在未登录时也能随系统启动
 if sudo loginctl enable-linger "$USER" 2>/dev/null; then
   echo "Linger 已开启（无需登录即可自动启动）"
