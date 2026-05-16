@@ -45,35 +45,42 @@ jobs:
           cd android
           gradle assembleRelease
 
-      - name: Rename APK
+      - name: Collect APKs
         run: |
           VERSION=$(date +%Y%m%d-%H%M)
-          APK_SRC="android/app/build/outputs/apk/release/app-arm64-v8a-release.apk"
-          APK_DST="multica-android-${VERSION}.apk"
-          cp "$APK_SRC" "$APK_DST"
-          echo "APK_FILE=$APK_DST" >> "$GITHUB_ENV"
+          APK_DIR="android/app/build/outputs/apk/release"
+          mkdir -p dist
+          # universal APK（平板 / 多架构通用）
+          if [ -f "${APK_DIR}/app-universal-release.apk" ]; then
+            cp "${APK_DIR}/app-universal-release.apk" "dist/multica-android-universal-${VERSION}.apk"
+          fi
+          # split APKs
+          for ABI in arm64-v8a armeabi-v7a x86_64; do
+            if [ -f "${APK_DIR}/app-${ABI}-release.apk" ]; then
+              cp "${APK_DIR}/app-${ABI}-release.apk" "dist/multica-android-${ABI}-${VERSION}.apk"
+            fi
+          done
           echo "APK_VERSION=$VERSION" >> "$GITHUB_ENV"
 
-      - name: Upload APK artifact
+      - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
           name: multica-android-${{ env.APK_VERSION }}
-          path: ${{ env.APK_FILE }}
+          path: dist/*.apk
           retention-days: 30
 
       - name: Update GitHub Release (android-latest)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          APK_FILE: ${{ env.APK_FILE }}
           APK_VERSION: ${{ env.APK_VERSION }}
         run: |
           NOTES="## 安装方法
-          1. 下载下方 APK 文件
-          2. 手机「设置 → 安全 → 允许安装未知来源应用」
+          1. 下载下方 APK 文件（不确定架构请选 universal）
+          2. 手机/平板「设置 → 安全 → 允许安装未知来源应用」
           3. 打开 APK 安装
 
           构建时间: ${APK_VERSION}
-          目标机型: Xiaomi 14 Pro (arm64-v8a)
+          支持设备: Xiaomi 14 Pro (arm64-v8a) · Xiaomi Pad 5 Pro (universal)
           目标地址: https://mtc.naivehero.top:8443"
 
           gh release delete android-latest --yes 2>/dev/null || true
@@ -81,4 +88,4 @@ jobs:
             --title "Multica Android (Latest Build)" \
             --notes "$NOTES" \
             --latest \
-            "$APK_FILE"
+            dist/*.apk
