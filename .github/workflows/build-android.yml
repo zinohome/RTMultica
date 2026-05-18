@@ -66,24 +66,25 @@ jobs:
       - name: Collect APKs
         run: |
           VERSION=$(date +%Y%m%d-%H%M)
-          mkdir -p dist
           APK_DIR="android/app/build/outputs/apk/release"
-
-          for ABI in universal arm64-v8a armeabi-v7a x86_64; do
-            SRC="$APK_DIR/app-${ABI}-release.apk"
-            if [ -f "$SRC" ]; then
-              cp "$SRC" "dist/multica-android-${VERSION}-${ABI}.apk"
+          mkdir -p dist
+          # universal APK（平板 / 多架构通用）
+          if [ -f "${APK_DIR}/app-universal-release.apk" ]; then
+            cp "${APK_DIR}/app-universal-release.apk" "dist/multica-android-universal-${VERSION}.apk"
+          fi
+          # split APKs
+          for ABI in arm64-v8a armeabi-v7a x86_64; do
+            if [ -f "${APK_DIR}/app-${ABI}-release.apk" ]; then
+              cp "${APK_DIR}/app-${ABI}-release.apk" "dist/multica-android-${ABI}-${VERSION}.apk"
             fi
           done
-
-          ls -lh dist/
           echo "APK_VERSION=$VERSION" >> "$GITHUB_ENV"
 
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
           name: multica-android-${{ env.APK_VERSION }}
-          path: dist/
+          path: dist/*.apk
           retention-days: 30
 
       - name: Update GitHub Release (android-latest)
@@ -98,8 +99,8 @@ jobs:
 
           构建时间: ${APK_VERSION}
           架构说明:
-          - universal：适用所有设备（推荐）
-          - arm64-v8a：Xiaomi Pad 5 Pro / Xiaomi 14 Pro 等 64 位设备
+          - universal：适用所有设备（推荐，包含 Xiaomi Pad 5 Pro）
+          - arm64-v8a：Xiaomi 14 Pro 等 64 位设备
           - armeabi-v7a：旧 32 位 ARM 设备
           - x86_64：Android 模拟器
           目标地址: https://mtc.naivehero.top:8443
@@ -110,4 +111,4 @@ jobs:
             --title "Multica Android (Latest Build)" \
             --notes "$NOTES" \
             --latest \
-            dist/*
+            dist/*.apk
