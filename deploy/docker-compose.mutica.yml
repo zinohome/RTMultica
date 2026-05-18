@@ -30,11 +30,13 @@ services:
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-multica}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-multica}?sslmode=disable
       PORT: "8080"
+      METRICS_ADDR: ${METRICS_ADDR:-}
       JWT_SECRET: ${JWT_SECRET}
       APP_ENV: production
       FRONTEND_ORIGIN: ${FRONTEND_ORIGIN}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
       MULTICA_APP_URL: ${MULTICA_APP_URL}
+      MULTICA_DEV_VERIFICATION_CODE: ${MULTICA_DEV_VERIFICATION_CODE:-}
       # 文件上传通过前端 /uploads/* 代理对外暴露
       LOCAL_UPLOAD_DIR: /app/data/uploads
       LOCAL_UPLOAD_BASE_URL: ${FRONTEND_ORIGIN}
@@ -57,6 +59,19 @@ services:
       ALLOW_SIGNUP: ${ALLOW_SIGNUP:-true}
       ALLOWED_EMAILS: ${ALLOWED_EMAILS:-}
       ALLOWED_EMAIL_DOMAINS: ${ALLOWED_EMAIL_DOMAINS:-}
+      # S3/CloudFront 对象存储（v0.3.2 新增，留空使用本地存储）
+      S3_BUCKET: ${S3_BUCKET:-}
+      S3_REGION: ${S3_REGION:-us-west-2}
+      CLOUDFRONT_DOMAIN: ${CLOUDFRONT_DOMAIN:-}
+      CLOUDFRONT_KEY_PAIR_ID: ${CLOUDFRONT_KEY_PAIR_ID:-}
+      CLOUDFRONT_PRIVATE_KEY: ${CLOUDFRONT_PRIVATE_KEY:-}
+      # GitHub App（Autopilot webhook 触发器）
+      GITHUB_APP_SLUG: ${GITHUB_APP_SLUG:-}
+      GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET:-}
+      # Webhook 公网 URL（留空则由前端从 window.origin 推导）
+      MULTICA_PUBLIC_URL: ${MULTICA_PUBLIC_URL:-}
+      # 受信任的反向代理 CIDR（留空则忽略 X-Forwarded-For）
+      MULTICA_TRUSTED_PROXIES: ${MULTICA_TRUSTED_PROXIES:-}
     restart: unless-stopped
     networks:
       - 1panel-network
