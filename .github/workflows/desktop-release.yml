@@ -28,7 +28,7 @@ jobs:
 
       - name: Clone upstream multica
         run: |
-          git clone --depth 1 --branch v0.3.2 https://github.com/multica-ai/multica.git projects/multica
+          git clone --depth 1 --branch v0.3.3 https://github.com/multica-ai/multica.git projects/multica
 
       - name: Setup Go
         uses: actions/setup-go@v5
