@@ -39,7 +39,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          package-json-file: projects/multica/package.json
+          package_json_file: projects/multica/package.json
 
       - name: Setup Node
         uses: actions/setup-node@v4
