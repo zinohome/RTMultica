@@ -21,6 +21,10 @@ android/keystore/
 *.apk
 *.aab
 
+# Desktop 构建产物
+desktop/dist/
+desktop/build.log
+
 # 系统文件
 .DS_Store
 Thumbs.db
