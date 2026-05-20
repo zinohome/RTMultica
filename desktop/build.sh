@@ -78,7 +78,7 @@ cp "$OVERLAY_SOURCE" "$OVERLAY_TARGET"
 # --- Install dependencies ---
 echo "[build] Installing dependencies..."
 cd "$MULTICA_DIR"
-pnpm install --frozen-lockfile
+pnpm install --no-frozen-lockfile
 
 # --- Build ---
 mkdir -p "$DIST_DIR"
