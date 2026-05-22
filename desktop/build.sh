@@ -14,6 +14,9 @@
 
 set -euo pipefail
 
+# Upstream multica version to build against. Update this on each release.
+MULTICA_VERSION="v0.3.6"
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 MULTICA_DIR="$REPO_ROOT/projects/multica"
@@ -52,6 +55,12 @@ if ! command -v pnpm &>/dev/null; then
   echo "Error: pnpm not found. Install via: npm install -g pnpm"
   exit 1
 fi
+
+# --- Checkout the target upstream version ---
+echo "[build] Checking out upstream multica $MULTICA_VERSION..."
+cd "$MULTICA_DIR"
+git fetch --tags --quiet
+git checkout "$MULTICA_VERSION" --quiet
 
 # --- Apply overlay (saves original via git stash, restores on exit) ---
 OVERLAY_TARGET="$MULTICA_DIR/apps/desktop/src/shared/runtime-config.ts"
