@@ -14,7 +14,6 @@ on:
 
 permissions:
   contents: write
-  releases: write
 
 jobs:
   build:
@@ -102,7 +101,14 @@ jobs:
           目标地址: https://mtc.naivehero.top:8443
           技术架构: Capacitor（内置 WebView，不依赖 Chrome）"
 
-          gh release delete android-latest --yes 2>/dev/null || true
+          API="https://api.github.com/repos/$GITHUB_REPOSITORY"
+          AUTH="Authorization: Bearer $GH_TOKEN"
+          RELEASE_ID=$(curl -sf -H "$AUTH" "$API/releases/tags/android-latest" \
+            | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id',''))" 2>/dev/null || true)
+          if [ -n "$RELEASE_ID" ]; then
+            curl -sf -X DELETE -H "$AUTH" "$API/releases/$RELEASE_ID" || true
+          fi
+          curl -sf -X DELETE -H "$AUTH" "$API/git/refs/tags/android-latest" || true
           gh release create android-latest \
             --title "Multica Android (Latest Build)" \
             --notes "$NOTES" \
