@@ -87,7 +87,12 @@ cp "$OVERLAY_SOURCE" "$OVERLAY_TARGET"
 # --- Install dependencies ---
 echo "[build] Installing dependencies..."
 cd "$MULTICA_DIR"
-pnpm install --no-frozen-lockfile
+# Use --ignore-scripts to skip apps/web postinstall (fumadocs-mdx incompatible with Node v26)
+# Then explicitly run desktop postinstall (electron-builder install-app-deps)
+pnpm install --no-frozen-lockfile --ignore-scripts
+cd "$DESKTOP_DIR"
+pnpm exec electron-builder install-app-deps 2>/dev/null || true
+cd "$MULTICA_DIR"
 
 # --- Build ---
 mkdir -p "$DIST_DIR"
