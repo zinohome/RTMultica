@@ -96,6 +96,7 @@ cd "$MULTICA_DIR"
 
 # --- Build ---
 mkdir -p "$DIST_DIR"
+rm -f "$DIST_DIR"/*.dmg "$DIST_DIR"/*.zip "$DIST_DIR"/*.blockmap
 cd "$DESKTOP_DIR"
 
 if $BUILD_ARM64; then
