@@ -104,8 +104,8 @@ if $BUILD_ARM64; then
   echo "[build] ── Building mac arm64 ──────────────────────────"
   CSC_IDENTITY_AUTO_DISCOVERY=false \
     node scripts/package.mjs --mac --arm64 --publish never
-  # Collect DMG (electron-builder output dir: dist/mac-arm64/)
-  find dist/mac-arm64 -maxdepth 1 -name "*.dmg" -exec cp {} "$DIST_DIR/" \; 2>/dev/null || true
+  # Collect DMG (electron-builder outputs DMG directly in dist/ root)
+  find dist -maxdepth 1 -name "*mac-arm64.dmg" -exec cp {} "$DIST_DIR/" \; 2>/dev/null || true
 fi
 
 if $BUILD_X64; then
@@ -113,8 +113,8 @@ if $BUILD_X64; then
   echo "[build] ── Building mac x64 ───────────────────────────"
   CSC_IDENTITY_AUTO_DISCOVERY=false \
     node scripts/package.mjs --mac --x64 --publish never
-  # Collect DMG (electron-builder output dir: dist/mac-x64/ or dist/)
-  find dist/mac-x64 -maxdepth 1 -name "*.dmg" -exec cp {} "$DIST_DIR/" \; 2>/dev/null || true
+  # Collect DMG (electron-builder outputs DMG directly in dist/ root)
+  find dist -maxdepth 1 -name "*mac-x64.dmg" -exec cp {} "$DIST_DIR/" \; 2>/dev/null || true
 fi
 
 # --- Report ---
