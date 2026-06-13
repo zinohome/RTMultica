@@ -99,13 +99,15 @@ mkdir -p "$DIST_DIR"
 rm -f "$DIST_DIR"/*.dmg "$DIST_DIR"/*.zip "$DIST_DIR"/*.blockmap
 cd "$DESKTOP_DIR"
 
+VERSION_CLEAN="${MULTICA_VERSION#v}"
+
 if $BUILD_ARM64; then
   echo ""
   echo "[build] ── Building mac arm64 ──────────────────────────"
   CSC_IDENTITY_AUTO_DISCOVERY=false \
     node scripts/package.mjs --mac --arm64 --publish never
-  # Collect DMG (electron-builder outputs DMG directly in dist/ root)
-  find dist -maxdepth 1 -name "*mac-arm64.dmg" -exec cp {} "$DIST_DIR/" \; 2>/dev/null || true
+  # Collect only the current version DMG (version-scoped to avoid copying old cached files)
+  find dist -maxdepth 1 -name "*${VERSION_CLEAN}*mac-arm64.dmg" -exec cp {} "$DIST_DIR/" \; 2>/dev/null || true
 fi
 
 if $BUILD_X64; then
@@ -113,8 +115,8 @@ if $BUILD_X64; then
   echo "[build] ── Building mac x64 ───────────────────────────"
   CSC_IDENTITY_AUTO_DISCOVERY=false \
     node scripts/package.mjs --mac --x64 --publish never
-  # Collect DMG (electron-builder outputs DMG directly in dist/ root)
-  find dist -maxdepth 1 -name "*mac-x64.dmg" -exec cp {} "$DIST_DIR/" \; 2>/dev/null || true
+  # Collect only the current version DMG (version-scoped to avoid copying old cached files)
+  find dist -maxdepth 1 -name "*${VERSION_CLEAN}*mac-x64.dmg" -exec cp {} "$DIST_DIR/" \; 2>/dev/null || true
 fi
 
 # --- Report ---
