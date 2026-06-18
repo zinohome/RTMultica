@@ -15,7 +15,7 @@
 set -euo pipefail
 
 # Upstream multica version to build against. Update this on each release.
-MULTICA_VERSION="v0.3.24"
+MULTICA_VERSION="v0.3.26"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
