@@ -65,17 +65,20 @@ git checkout "$MULTICA_VERSION" --quiet
 # --- Apply overlay (saves original via git stash, restores on exit) ---
 OVERLAY_TARGET="$MULTICA_DIR/apps/desktop/src/shared/runtime-config.ts"
 OVERLAY_SOURCE="$OVERLAY_DIR/apps/desktop/src/shared/runtime-config.ts"
+DESKTOP_PKG="$MULTICA_DIR/apps/desktop/package.json"
 
 echo "[build] Stashing upstream changes in projects/multica..."
 cd "$MULTICA_DIR"
-# Only stash the specific file we'll overlay, so other upstream changes survive
-git stash push --quiet -- apps/desktop/src/shared/runtime-config.ts \
+# Stash the files we'll overlay so the git worktree is clean for version derivation
+git stash push --quiet \
+  -- apps/desktop/src/shared/runtime-config.ts \
+     apps/desktop/package.json \
   2>/dev/null || true
 
 # Ensure overlay is always restored on exit (success, error, or Ctrl-C)
 cleanup() {
   echo ""
-  echo "[build] Restoring upstream runtime-config.ts..."
+  echo "[build] Restoring upstream files..."
   cd "$MULTICA_DIR"
   git stash pop --quiet 2>/dev/null || true
 }
@@ -83,6 +86,18 @@ trap cleanup EXIT
 
 echo "[build] Applying RTMultica server overlay..."
 cp "$OVERLAY_SOURCE" "$OVERLAY_TARGET"
+
+# Add packageManager field so electron-builder detects pnpm (not npm).
+# Without this, electron-builder falls back to npm's parent-dir module
+# resolution, traverses the workspace-root node_modules symlinks into
+# .pnpm, and fails with "unsafe path" on packages not in the desktop app's
+# own dependency tree (e.g. @antfu/install-pkg added in v0.4.0).
+node -e "
+const fs = require('fs');
+const pkg = JSON.parse(fs.readFileSync('$DESKTOP_PKG', 'utf8'));
+pkg.packageManager = 'pnpm@10.28.2';
+fs.writeFileSync('$DESKTOP_PKG', JSON.stringify(pkg, null, 2) + '\n');
+"
 
 # --- Install dependencies ---
 echo "[build] Installing dependencies..."
