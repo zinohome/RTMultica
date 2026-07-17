@@ -10,6 +10,8 @@ deploy/.env*
 *.env
 *.env.local
 *.env.production
+# RTMultica overlay env holds only public server URLs (not secrets) — must be tracked
+!mobile/overlay/apps/mobile/.env.production
 
 # Android 构建产物
 android/.gradle/
