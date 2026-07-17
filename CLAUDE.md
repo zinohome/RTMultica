@@ -38,6 +38,37 @@ npx cap sync android              # sync config/plugins into android/
 cd android && ./gradlew assembleRelease   # needs KEYSTORE_* env to sign, else unsigned
 ```
 
+## Android client — native (React Native, `mobile/`)
+
+A **second, true-native** Android client built from upstream's Expo/React Native
+app (`apps/mobile`), running in parallel with the Capacitor shell above (different
+package, both installable at once). This is the real-native path — RN renders
+native components, not a WebView.
+
+- Upstream `apps/mobile` ships **iOS-only** config (no `android:` block, no android
+  scripts). RTMultica adds Android support via an overlay, exactly like the desktop
+  overlay pattern — see `docs/superpowers/specs/2026-07-17-rtmultica-android-native-rn-design.md`.
+- `mobile/overlay/apps/mobile/` — files copied over upstream at build time:
+  - `.env.production` → `EXPO_PUBLIC_API_URL=https://mtcsrv.naivehero.top:8443` (API host,
+    same as desktop's `apiUrl`; ws is derived in-app) + `EXPO_PUBLIC_WEB_URL=https://mtc.naivehero.top:8443`.
+    ⚠️ This file is force-tracked past `.gitignore`'s `*.env.production` rule (holds only public URLs).
+  - `app.config.ts` → adds the `android:` block: package `top.naivehero.multica.rn`,
+    display name `Multica RN`, adaptive icon, edge-to-edge, `READ_MEDIA_IMAGES`.
+    **Full-file overlay** — re-sync against upstream when bumping `MULTICA_VERSION`.
+- `mobile/scripts/inject-android-signing.mjs` — post-prebuild patch: injects a release
+  `signingConfig` reading the keystore from env (reuses the Capacitor secrets:
+  `KEYSTORE_PATH`/`KEY_STORE_PASSWORD`/`KEY_ALIAS`/`KEY_PASSWORD`), and pins
+  `reactNativeArchitectures=arm64-v8a` (both target devices are arm64; halves APK size).
+- `mobile/build-android.sh` — local build, mirrors `desktop/build.sh` (checkout tag →
+  overlay via git stash → `expo prebuild` → inject signing → `gradlew assembleRelease`).
+  **`EXPO_PUBLIC_*` must be exported into the environment** (the script `source`s the
+  overlay `.env`) — Metro inlines env vars into the release bundle; the `.env` file alone
+  isn't auto-loaded when invoking expo directly.
+- CI: `.github/workflows/build-android-native.yml` — ubuntu runner clones upstream at the
+  pinned tag, applies overlay, prebuilds, signs, `gradlew assembleRelease`, publishes to
+  the **`android-native-latest`** GitHub Release (distinct from the shell's `android-latest`).
+  Triggers on push to `main`/`android-native-build` touching `mobile/**` or the workflow.
+
 ## Desktop client (`desktop/build.sh`)
 
 Run **on macOS** (`Go`, `Node 22`, `pnpm` required, plus `projects/multica` cloned):
@@ -80,5 +111,10 @@ version fields that must be kept in sync**:
   ⚠️ `versionCode` **must strictly increase** every release — a stale/lower code causes Android
   "downgrade install" failures (see commit 55507c4).
 - `desktop/build.sh` → `MULTICA_VERSION` (the upstream tag desktop builds against).
+- `mobile/build-android.sh` **and** `.github/workflows/build-android-native.yml` →
+  `MULTICA_VERSION` (upstream tag the RN Android app builds against; keep both in sync).
+  The RN app's own `versionCode`/`versionName` live in `mobile/overlay/apps/mobile/app.config.ts`
+  under `android.versionCode` — an **independent** series from the Capacitor `build.gradle` one
+  (different package), so it starts at 1 and increments on its own.
 - `capacitor.config.json` server URLs and the overlay `runtime-config.ts` are the two places server
   addresses live; note Android and desktop point at **different hosts** (`mtc.` vs `mtcsrv.`).
