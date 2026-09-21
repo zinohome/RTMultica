@@ -1,0 +1,10 @@
+{
+  "appId": "top.naivehero.multica.m349",
+  "appName": "Multica M349",
+  "webDir": "www",
+  "server": {
+    "url": "https://multica.m349.net",
+    "cleartext": false,
+    "androidScheme": "https"
+  }
+}

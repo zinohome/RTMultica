@@ -1,5 +1,12 @@
 name: Build Multica Android APK (Capacitor)
 
+# Builds two Capacitor Android variants that install side by side on the same
+# device (different applicationId each):
+#   - mtc  → top.naivehero.multica      → https://mtc.naivehero.top:8443
+#   - m349 → top.naivehero.multica.m349 → https://multica.m349.net
+# The m349 variant's server/app identity lives in capacitor.config.m349.json;
+# the mtc variant is the committed root capacitor.config.json (unchanged).
+
 on:
   push:
     branches: [main]
@@ -9,6 +16,7 @@ on:
       - 'package.json'
       - 'package-lock.json'
       - 'capacitor.config.json'
+      - 'capacitor.config.m349.json'
       - '.github/workflows/build-android.yml'
   workflow_dispatch:
 
@@ -18,6 +26,15 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - variant: mtc
+            app_id: top.naivehero.multica
+            app_name: Multica
+          - variant: m349
+            app_id: top.naivehero.multica.m349
+            app_name: Multica M349
 
     steps:
       - uses: actions/checkout@v4
@@ -30,6 +47,18 @@ jobs:
 
       - name: Install npm dependencies
         run: npm ci
+
+      # mtc is the committed default (root capacitor.config.json / build.gradle
+      # / strings.xml already match it) — only m349 needs patching before sync.
+      - name: Apply m349 variant identity
+        if: matrix.variant == 'm349'
+        run: |
+          cp capacitor.config.m349.json capacitor.config.json
+          sed -i 's/applicationId "top.naivehero.multica"/applicationId "${{ matrix.app_id }}"/' android/app/build.gradle
+          sed -i "s#<string name=\"app_name\">.*</string>#<string name=\"app_name\">${{ matrix.app_name }}</string>#" android/app/src/main/res/values/strings.xml
+          sed -i "s#<string name=\"title_activity_main\">.*</string>#<string name=\"title_activity_main\">${{ matrix.app_name }}</string>#" android/app/src/main/res/values/strings.xml
+          sed -i "s#<string name=\"package_name\">.*</string>#<string name=\"package_name\">${{ matrix.app_id }}</string>#" android/app/src/main/res/values/strings.xml
+          sed -i "s#<string name=\"custom_url_scheme\">.*</string>#<string name=\"custom_url_scheme\">${{ matrix.app_id }}</string>#" android/app/src/main/res/values/strings.xml
 
       - name: Sync Capacitor Android
         run: |
@@ -65,40 +94,58 @@ jobs:
           mkdir -p dist
           # universal APK（平板 / 多架构通用）
           if [ -f "${APK_DIR}/app-universal-release.apk" ]; then
-            cp "${APK_DIR}/app-universal-release.apk" "dist/multica-android-universal-${VERSION}.apk"
+            cp "${APK_DIR}/app-universal-release.apk" "dist/multica-${{ matrix.variant }}-android-universal-${VERSION}.apk"
           fi
           # split APKs
           for ABI in arm64-v8a armeabi-v7a x86_64; do
             if [ -f "${APK_DIR}/app-${ABI}-release.apk" ]; then
-              cp "${APK_DIR}/app-${ABI}-release.apk" "dist/multica-android-${ABI}-${VERSION}.apk"
+              cp "${APK_DIR}/app-${ABI}-release.apk" "dist/multica-${{ matrix.variant }}-android-${ABI}-${VERSION}.apk"
             fi
           done
-          echo "APK_VERSION=$VERSION" >> "$GITHUB_ENV"
 
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: multica-android-${{ env.APK_VERSION }}
+          name: multica-${{ matrix.variant }}-apks
           path: dist/*.apk
           retention-days: 30
+
+  release:
+    needs: build
+    # Run even if one matrix leg failed — publish whichever variant(s) built
+    # successfully instead of letting a broken m349 leg block the mtc release
+    # that used to always ship on its own before this became a matrix build.
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all variant APKs
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: multica-*-apks
+          merge-multiple: true
 
       - name: Update GitHub Release (android-latest)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          APK_VERSION: ${{ env.APK_VERSION }}
         run: |
+          VERSION=$(date +%Y%m%d-%H%M)
           NOTES="## 安装方法
           1. 下载下方 APK（不确定型号选 universal）
           2. 设置 → 安全 → 允许安装未知来源应用
           3. 打开 APK 安装
 
-          构建时间: ${APK_VERSION}
+          构建时间: ${VERSION}
           架构说明:
           - universal：适用所有设备（推荐，包含 Xiaomi Pad 5 Pro）
           - arm64-v8a：Xiaomi 14 Pro 等 64 位设备
           - armeabi-v7a：旧 32 位 ARM 设备
           - x86_64：Android 模拟器
-          目标地址: https://mtc.naivehero.top:8443
+
+          本次发布包含两个可同时安装的版本（包名不同，可共存于同一台设备）：
+          - **mtc 版**（multica-mtc-*，包名 top.naivehero.multica）→ 目标服务器 https://mtc.naivehero.top:8443
+          - **m349 版**（multica-m349-*，包名 top.naivehero.multica.m349）→ 目标服务器 https://multica.m349.net
+
           技术架构: Capacitor（内置 WebView，不依赖 Chrome）"
 
           API="https://api.github.com/repos/$GITHUB_REPOSITORY"

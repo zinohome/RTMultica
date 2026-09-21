@@ -27,8 +27,19 @@ deploy) — the app's actual behavior is usually not editable from this repo.
 - `android/app/build.gradle` builds **ABI splits** (`arm64-v8a`, `armeabi-v7a`, `x86_64`) plus a
   `universalApk`. Signing is only applied when `KEYSTORE_PATH` env is set (CI); local builds are unsigned.
 - Build/release is automated: `.github/workflows/build-android.yml` runs on push to `main` touching
-  `android/**`, `www/**`, `package.json`, `capacitor.config.json`, or the workflow itself. It signs
-  with `SIGNING_KEY_BASE64` / `KEY_*` secrets and publishes all APKs to the `android-latest` GitHub Release.
+  `android/**`, `www/**`, `package.json`, `capacitor.config.json`, `capacitor.config.m349.json`, or the
+  workflow itself. It signs with `SIGNING_KEY_BASE64` / `KEY_*` secrets and publishes all APKs to the
+  `android-latest` GitHub Release.
+- **Two installable-side-by-side variants**, built as a CI matrix (different `applicationId` each, so
+  both can be installed on the same device at once):
+  - `mtc` — the committed default (`top.naivehero.multica`, root `capacitor.config.json`) → `https://mtc.naivehero.top:8443`
+  - `m349` — `top.naivehero.multica.m349`, config in `capacitor.config.m349.json` → `https://multica.m349.net`
+  The `m349` matrix leg patches `android/app/build.gradle`'s `applicationId` and
+  `android/app/src/main/res/values/strings.xml` (`app_name` / `title_activity_main` / `package_name` /
+  `custom_url_scheme`) at build time via `sed` — those files stay checked in as the `mtc` defaults; the
+  patch never gets committed back. Both legs upload their own artifact, then a `release` job merges both
+  sets of APKs into one `android-latest` release, filenames prefixed `multica-mtc-*` / `multica-m349-*`.
+  Adding a third address later means: add a `capacitor.config.<name>.json`, add a matrix entry, done.
 
 Local Android commands:
 
@@ -116,5 +127,8 @@ version fields that must be kept in sync**:
   The RN app's own `versionCode`/`versionName` live in `mobile/overlay/apps/mobile/app.config.ts`
   under `android.versionCode` — an **independent** series from the Capacitor `build.gradle` one
   (different package), so it starts at 1 and increments on its own.
-- `capacitor.config.json` server URLs and the overlay `runtime-config.ts` are the two places server
-  addresses live; note Android and desktop point at **different hosts** (`mtc.` vs `mtcsrv.`).
+- `capacitor.config.json` (`mtc` variant), `capacitor.config.m349.json` (`m349` variant), the RN
+  overlay `.env.production`, and the desktop overlay `runtime-config.ts` are where server addresses
+  live; note the Capacitor `mtc` variant, desktop, and RN app can each point at a **different host**
+  (`mtc.naivehero.top` / `mtcsrv.naivehero.top` / `multica.m349.net`) — check all four before assuming
+  a domain migration is complete.
