@@ -48,4 +48,10 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- DownloadManager writing to the public Downloads dir needs this below
+         Android 10 (scoped storage exempts DownloadManager's own writes from
+         API 29 onward, so this is a no-op there, not a runtime prompt). -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
 </manifest>
