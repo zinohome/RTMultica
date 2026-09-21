@@ -21,7 +21,7 @@
 set -euo pipefail
 
 # Upstream multica tag to build against. Keep in sync with desktop/build.sh.
-MULTICA_VERSION="v0.4.3"
+MULTICA_VERSION="v0.5.0"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"

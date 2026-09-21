@@ -17,7 +17,7 @@ permissions:
 
 env:
   # Upstream tag to build against — keep in sync with mobile/build-android.sh.
-  MULTICA_VERSION: v0.4.3
+  MULTICA_VERSION: v0.5.0
   PNPM_VERSION: 10.28.2
 
 jobs:
@@ -124,7 +124,7 @@ jobs:
         run: |
           NOTES="## Multica 原生安卓版 (React Native)
 
-          真原生客户端（非 WebView 套壳）。目标服务器: https://mtcsrv.naivehero.top:8443
+          真原生客户端（非 WebView 套壳）。目标服务器: https://multica.m349.net
 
           ### 安装
           1. 下载下方 APK

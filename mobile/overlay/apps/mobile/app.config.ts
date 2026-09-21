@@ -28,15 +28,29 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         : "Multica RN (Dev)",
     slug: "multica-mobile",
     version: "0.1.0",
-    // Portrait-locked: the UI is designed for phone portrait (upstream
-    // ios.supportsTablet = false). On the Xiaomi Pad 5 Pro it runs portrait,
-    // which is stable — rotating a phone-first layout risks broken screens.
+    // Portrait-locked: the UI is designed for phone portrait. Upstream now
+    // sets ios.supportsTablet = true (iPad multitasking support), but on the
+    // Xiaomi Pad 5 Pro this app only ever runs portrait, which is stable —
+    // rotating a phone-first layout risks broken screens.
     orientation: "portrait",
     userInterfaceStyle: "automatic",
     scheme: "multica",
     icon: "./assets/icon.png",
     ios: {
-      supportsTablet: false,
+      // Expo keeps the top-level portrait policy for iPhone while adding all
+      // iPad orientations required for multitasking when tablet support is on.
+      supportsTablet: true,
+      // Pins DEVELOPMENT_TEAM on every prebuild. Leaving it unset is the normal
+      // path — `expo run:ios` then resolves a signing identity from the Keychain
+      // itself, which is right when the Apple ID owns exactly one team. With
+      // several (a personal team plus an employer's) it takes the *first*
+      // identity found whenever the terminal is non-interactive, writes that
+      // choice into the generated ios/, and never clears it again: prebuild only
+      // writes DEVELOPMENT_TEAM when a value is present, so a project pinned to
+      // the wrong team stays wrong until ios/ is deleted. Setting this re-applies
+      // the intended team on every `scripts/ios-run.sh` run, which also repairs
+      // an already-mispinned checkout.
+      appleTeamId: process.env.EXPO_APPLE_TEAM_ID,
       bundleIdentifier: isProd
         ? (process.env.EXPO_BUNDLE_IDENTIFIER_PROD ?? "ai.multica.mobile")
         : isStaging
@@ -46,7 +60,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     // RTMultica addition — Android target (upstream has none).
     android: {
       package: "top.naivehero.multica.rn",
-      versionCode: 1,
+      versionCode: 2,
       // Android 15+ enforces edge-to-edge; opting in explicitly keeps the
       // status/nav bars laid out correctly across Xiaomi's HyperOS skin.
       edgeToEdgeEnabled: true,
