@@ -112,6 +112,10 @@ jobs:
 
   release:
     needs: build
+    # Run even if one matrix leg failed — publish whichever variant(s) built
+    # successfully instead of letting a broken m349 leg block the mtc release
+    # that used to always ship on its own before this became a matrix build.
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     steps:
       - name: Download all variant APKs
