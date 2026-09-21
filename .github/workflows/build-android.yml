@@ -118,6 +118,11 @@ jobs:
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     steps:
+      # `gh release` needs to be run inside a checked-out repo to resolve the
+      # target — this job has no other reason to check out, but skipping it
+      # made `gh release create` fail with "fatal: not a git repository".
+      - uses: actions/checkout@v4
+
       - name: Download all variant APKs
         uses: actions/download-artifact@v4
         with:
